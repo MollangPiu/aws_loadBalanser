@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서버 간 통신 테스트</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          background: var(--random-gradient);
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          transition: background 0.5s ease;
+        }
+        .container {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          border-radius: 20px;
+          padding: 40px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+          text-align: center;
+          max-width: 600px;
+          width: 100%;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h1 {
+          color: #333;
+          margin-bottom: 30px;
+          font-size: 2.5em;
+          font-weight: 300;
+          background: linear-gradient(45deg, #00b894, #00a085);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .ip-info, .peer-test {
+          background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+          border-radius: 15px;
+          padding: 25px;
+          margin: 20px 0;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .ip-item { margin-bottom: 10px; font-size: 1.1em; color: #2d3436; }
+        .input-group { margin: 15px 0; }
+        .peer-input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; }
+        .button-group { display: flex; gap: 10px; margin: 15px 0; }
+        .peer-btn { flex: 1; padding: 10px 15px; border: none; border-radius: 8px; font-size: 1em; cursor: pointer; transition: all 0.3s ease; }
+        .send-btn { background: #00b894; color: white; }
+        .check-btn { background: #0984e3; color: white; }
+        .peer-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .peer-result { margin-top: 15px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.8); min-height: 20px; text-align: left; }
+        @media (max-width: 600px) { .container { padding: 30px 20px; } h1 { font-size: 2em; } .button-group { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 서버 간 통신 테스트</h1>
+        
+        <div class="ip-info">
+            <h3>🌐 현재 서버 정보</h3>
+            <div class="ip-item">
+                <strong>Public IP:</strong> <span id="public-ip">로딩 중...</span>
+            </div>
+            <div class="ip-item">
+                <strong>Private IP:</strong> <span id="private-ip">로딩 중...</span>
+            </div>
+        </div>
+        
+        <div class="peer-test">
+            <h3>📡 상대 서버로 메시지 전송</h3>
+            <div class="input-group">
+                <input type="text" id="peerHost" placeholder="상대 서버 Private IP (예: 172.31.6.253)" class="peer-input">
+                <input type="text" id="peerNote" placeholder="메모 (선택사항)" class="peer-input">
+            </div>
+            <div class="button-group">
+                <button class="peer-btn send-btn" onclick="sendToPeer()">📤 전송</button>
+                <button class="peer-btn check-btn" onclick="checkReceived()">📥 수신확인</button>
+            </div>
+            <div id="peer-result" class="peer-result"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 부드러운 랜덤 배경색 생성
+        function setRandomBackground() {
+            const softColors = [
+                ['#a8edea', '#fed6e3'], // 연한 민트-핑크
+                ['#d299c2', '#fef9d7'], // 연한 보라-노랑
+                ['#89f7fe', '#66a6ff'], // 연한 하늘-파랑
+                ['#fdbb2d', '#22c1c3'], // 연한 주황-청록
+                ['#ffecd2', '#fcb69f'], // 연한 크림-복숭아
+                ['#a1c4fd', '#c2e9fb'], // 연한 파랑-하늘
+                ['#ff9a9e', '#fecfef'], // 연한 핑크-라벤더
+                ['#ffecd2', '#fcb69f'], // 연한 오렌지-핑크
+                ['#84fab0', '#8fd3f4'], // 연한 그린-블루
+                ['#fad0c4', '#ffd1ff']  // 연한 피치-핑크
+            ];
+            
+            const randomPair = softColors[Math.floor(Math.random() * softColors.length)];
+            const gradient = `linear-gradient(135deg, ${randomPair[0]} 0%, ${randomPair[1]} 100%)`;
+            document.documentElement.style.setProperty('--random-gradient', gradient);
+        }
+
+        async function loadIPInfo() {
+            try {
+                const response = await fetch('/api/ip-info');
+                const data = await response.json();
+                document.getElementById('public-ip').textContent = data.publicIP;
+                document.getElementById('private-ip').textContent = data.privateIPs.map(ip => `${ip.interface}: ${ip.address}`).join(', ');
+            } catch (error) {
+                document.getElementById('public-ip').textContent = '오류';
+                document.getElementById('private-ip').textContent = '오류';
+            }
+        }
+
+        async function sendToPeer() {
+            const peerHost = document.getElementById('peerHost').value.trim();
+            const peerNote = document.getElementById('peerNote').value.trim();
+            const resultDiv = document.getElementById('peer-result');
+            if (!peerHost) {
+                resultDiv.innerHTML = '<div style="color:#ff6b6b;">상대 서버 IP를 입력해주세요.</div>';
+                return;
+            }
+            resultDiv.innerHTML = '<div style="color:#666;">전송 중...</div>';
+            try {
+                const response = await fetch('/api/peer/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ peerHost, note: peerNote })
+                });
+                const data = await response.json();
+                if (data.ok) {
+                    resultDiv.innerHTML = `<div style="color:#00b894;">✅ 전송 성공!<br>내 Private IP: ${data.myPrivateIP}<br>상대 응답: ${JSON.stringify(data.peerResponse)}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div style="color:#ff6b6b;">❌ 전송 실패: ${data.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color:#ff6b6b;">❌ 오류: ${error.message}</div>`;
+            }
+        }
+
+        async function checkReceived() {
+            const resultDiv = document.getElementById('peer-result');
+            resultDiv.innerHTML = '<div style="color:#666;">수신 내역 확인 중...</div>';
+            try {
+                const response = await fetch('/api/peer/received');
+                const data = await response.json();
+                if (data.count === 0) {
+                    resultDiv.innerHTML = '<div style="color:#fdcb6e;">📭 수신된 메시지가 없습니다.</div>';
+                } else {
+                    let html = `<div style="color:#00b894;">📬 수신된 메시지 (${data.count}개):</div>`;
+                    data.items.forEach((item, index) => {
+                        html += `<div style="margin:10px 0; padding:10px; background:rgba(255,255,255,0.7); border-radius:8px;">
+                            <strong>${index + 1}.</strong> ${item.fromPrivateIP}<br>
+                            <small>메모: ${item.note || '없음'}</small><br>
+                            <small>수신시간: ${new Date(item.receivedAt).toLocaleString('ko-KR')}</small>
+                        </div>`;
+                    });
+                    resultDiv.innerHTML = html;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div style="color:#ff6b6b;">❌ 오류: ${error.message}</div>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setRandomBackground();
+            loadIPInfo();
+        });
+    </script>
+</body>
+</html>
+

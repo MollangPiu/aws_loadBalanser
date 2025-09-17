@@ -1,10 +1,12 @@
 const express = require('express');
+const path = require('path');
 const os = require('os');
 const app = express();
 const PORT = 3000;
 
-// 정적 파일 서빙 (server1.html, server2.html 포함)
+// 정적 파일 서빙 (루트와 public 모두)
 app.use(express.static('.'));
+app.use(express.static(path.join(__dirname, 'public')));
 // JSON 바디 파싱 (에러 처리 포함)
 app.use(express.json({ 
     limit: '10mb',
@@ -22,365 +24,17 @@ app.use(express.json({
 // 서버 간 수신 기록을 메모리에 저장
 const peerReceiveLog = [];
 
-// server1.html 렌더링 (IP 정보 포함)
-app.get('/server1.html', async (req, res) => {
-    const ipInfo = await getIPInfo();
-    const html = `
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>서버 1 - 로드밸런서 테스트</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+// (페이지 SSR 라우트 제거) — 정적 파일과 단축 경로만 유지
 
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            font-weight: 300;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .server-info {
-            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-            border-radius: 15px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .server-info:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        .server-label {
-            font-size: 1.2em;
-            color: #2d3436;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .ip-info {
-            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-            border-radius: 15px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .ip-info:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        .ip-item {
-            margin-bottom: 10px;
-            font-size: 1.1em;
-            color: #2d3436;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
-        }
-
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
-        }
-
-        .refresh-btn:active {
-            transform: translateY(0);
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🔥 서버 1</h1>
-        
-        <div class="server-info">
-            <div class="server-label">⚡ 로드밸런서 테스트 - 서버 1</div>
-            <p>현재 요청이 서버 1로 라우팅되었습니다!</p>
-        </div>
-        
-        <div class="ip-info">
-            <h3>🌐 네트워크 정보</h3>
-            <div class="ip-item">
-                <strong>Public IP:</strong> ${ipInfo.publicIP}
-            </div>
-            <div class="ip-item">
-                <strong>Private IP:</strong><br>
-                ${ipInfo.privateIPs.map(ip => `${ip.interface}: ${ip.address}`).join('<br>')}
-            </div>
-            <div class="ip-item">
-                <strong>업데이트 시간:</strong> ${new Date(ipInfo.timestamp).toLocaleString('ko-KR')}
-            </div>
-        </div>
-        
-        <button class="refresh-btn" onclick="location.reload()">🔄 새로고침</button>
-    </div>
-</body>
-</html>`;
-    res.send(html);
+// public 하위에 폴더로 분리된 정적 페이지 단축 경로
+app.get('/server1', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'server1', 'index.html'));
 });
-
-// server2.html 렌더링 (IP 정보 포함)
-app.get('/server2.html', async (req, res) => {
-    const ipInfo = await getIPInfo();
-    const html = `
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>서버 2 - 로드밸런서 테스트</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        h1 {
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            font-weight: 300;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .server-info {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            border-radius: 15px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .server-info:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        .server-label {
-            font-size: 1.2em;
-            color: #2d3436;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .ip-info {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            border-radius: 15px;
-            padding: 25px;
-            margin: 20px 0;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .ip-info:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        .ip-item {
-            margin-bottom: 10px;
-            font-size: 1.1em;
-            color: #2d3436;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .refresh-btn:active {
-            transform: translateY(0);
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🌊 서버 2</h1>
-        
-        <div class="server-info">
-            <div class="server-label">⚡ 로드밸런서 테스트 - 서버 2</div>
-            <p>현재 요청이 서버 2로 라우팅되었습니다!</p>
-        </div>
-        
-        <div class="ip-info">
-            <h3>🌐 네트워크 정보</h3>
-            <div class="ip-item">
-                <strong>Public IP:</strong> ${ipInfo.publicIP}
-            </div>
-            <div class="ip-item">
-                <strong>Private IP:</strong><br>
-                ${ipInfo.privateIPs.map(ip => `${ip.interface}: ${ip.address}`).join('<br>')}
-            </div>
-            <div class="ip-item">
-                <strong>업데이트 시간:</strong> ${new Date(ipInfo.timestamp).toLocaleString('ko-KR')}
-            </div>
-        </div>
-        
-        <button class="refresh-btn" onclick="location.reload()">🔄 새로고침</button>
-    </div>
-</body>
-</html>`;
-    res.send(html);
+app.get('/server2', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'server2', 'index.html'));
 });
-
-// ========== Peer 통신 엔드포인트 ==========
-// 상대 서버가 우리에게 자신의 Private IP를 등록(전송)
-app.post('/api/peer/register', (req, res) => {
-    const { fromPrivateIP, note } = req.body || {};
-    const record = {
-        fromPrivateIP: fromPrivateIP || 'unknown',
-        note: note || '',
-        receivedAt: new Date().toISOString(),
-        client: req.ip,
-        xff: req.headers['x-forwarded-for'] || null,
-    };
-    peerReceiveLog.push(record);
-    res.json({ ok: true, received: record, total: peerReceiveLog.length });
-});
-
-// 우리가 받은 목록 확인
-app.get('/api/peer/received', (req, res) => {
-    res.json({ count: peerReceiveLog.length, items: peerReceiveLog });
-});
-
-// 상대 서버로 우리 Private IP를 전송
-app.post('/api/peer/send', async (req, res) => {
-    try {
-        const { peerHost, note } = req.body || {};
-        if (!peerHost) {
-            return res.status(400).json({ ok: false, error: 'peerHost가 필요합니다. 예: 172.31.x.x 또는 hostname' });
-        }
-
-        const info = await getIPInfo();
-        const myPrivate = (info.privateIPs[0] && info.privateIPs[0].address) || null;
-        if (!myPrivate) {
-            return res.status(500).json({ ok: false, error: '내 Private IP를 찾을 수 없습니다.' });
-        }
-
-        const url = `http://${peerHost}:${PORT}/api/peer/register`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fromPrivateIP: myPrivate, note: note || 'hello from peer' }),
-            timeout: 5000,
-        });
-
-        const data = await response.json().catch(() => ({}));
-        res.json({ ok: true, sentTo: url, myPrivateIP: myPrivate, peerResponse: data });
-    } catch (err) {
-        res.status(502).json({ ok: false, error: err.message || String(err) });
-    }
+app.get('/peer-test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'peer', 'index.html'));
 });
 
 // Public IP를 가져오는 비동기 함수 (AWS Metadata API 우선)
@@ -458,9 +112,64 @@ async function getIPInfo() {
     };
 }
 
-app.get('/api/ip-info', async (req, res) => {
+// ========== API Router (/api) ==========
+const api = express.Router();
+
+// 상대 서버가 우리에게 자신의 Private IP를 등록(전송)
+api.post('/peer/register', (req, res) => {
+    const { fromPrivateIP, note } = req.body || {};
+    const record = {
+        fromPrivateIP: fromPrivateIP || 'unknown',
+        note: note || '',
+        receivedAt: new Date().toISOString(),
+        client: req.ip,
+        xff: req.headers['x-forwarded-for'] || null,
+    };
+    peerReceiveLog.push(record);
+    res.json({ ok: true, received: record, total: peerReceiveLog.length });
+});
+
+// 우리가 받은 목록 확인
+api.get('/peer/received', (req, res) => {
+    res.json({ count: peerReceiveLog.length, items: peerReceiveLog });
+});
+
+// 상대 서버로 우리 Private IP를 전송
+api.post('/peer/send', async (req, res) => {
+    try {
+        const { peerHost, note } = req.body || {};
+        if (!peerHost) {
+            return res.status(400).json({ ok: false, error: 'peerHost가 필요합니다. 예: 172.31.x.x 또는 hostname' });
+        }
+
+        const info = await getIPInfo();
+        const myPrivate = (info.privateIPs[0] && info.privateIPs[0].address) || null;
+        if (!myPrivate) {
+            return res.status(500).json({ ok: false, error: '내 Private IP를 찾을 수 없습니다.' });
+        }
+
+        const url = `http://${peerHost}:${PORT}/api/peer/register`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fromPrivateIP: myPrivate, note: note || 'hello from peer' }),
+            timeout: 5000,
+        });
+
+        const data = await response.json().catch(() => ({}));
+        res.json({ ok: true, sentTo: url, myPrivateIP: myPrivate, peerResponse: data });
+    } catch (err) {
+        res.status(502).json({ ok: false, error: err.message || String(err) });
+    }
+});
+
+// IP 정보 조회
+api.get('/ip-info', async (req, res) => {
     res.json(await getIPInfo());
 });
+
+// /api로 마운트
+app.use('/api', api);
 
 app.listen(PORT, () => {
     console.log('🌐 Server is running on port ' + PORT);
