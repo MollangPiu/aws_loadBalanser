@@ -1,1 +1,1 @@
-{"name":"load-balancer-test","version":"1.0.0","description":"�ε�뷱�� �׽�Ʈ�� Node.js ������","main":"server1.js","scripts":{"start1":"node server1.js","start2":"node server2.js"},"dependencies":{"express":"^4.21.2"},"author":"","license":"MIT"}
+{"name":"load-balancer-test","version":"1.0.0","description":"�ε�뷱�� �׽�Ʈ�� Node.js ������","main":"server1.js","scripts":{"start1":"node server1.js","start2":"node server2.js"},"dependencies":{"express":"^4.21.2","package.json":"^2.0.1"},"author":"","license":"MIT"}

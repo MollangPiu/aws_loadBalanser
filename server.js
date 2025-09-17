@@ -5,6 +5,22 @@ const PORT = 3000;
 
 // 정적 파일 서빙 (server1.html, server2.html 포함)
 app.use(express.static('.'));
+// JSON 바디 파싱 (에러 처리 포함)
+app.use(express.json({ 
+    limit: '10mb',
+    verify: (req, res, buf, encoding) => {
+        try {
+            JSON.parse(buf);
+        } catch (e) {
+            console.error('JSON 파싱 에러:', e.message);
+            console.error('받은 데이터:', buf.toString());
+            throw new Error('Invalid JSON');
+        }
+    }
+}));
+
+// 서버 간 수신 기록을 메모리에 저장
+const peerReceiveLog = [];
 
 // server1.html 렌더링 (IP 정보 포함)
 app.get('/server1.html', async (req, res) => {
@@ -316,6 +332,55 @@ app.get('/server2.html', async (req, res) => {
 </body>
 </html>`;
     res.send(html);
+});
+
+// ========== Peer 통신 엔드포인트 ==========
+// 상대 서버가 우리에게 자신의 Private IP를 등록(전송)
+app.post('/api/peer/register', (req, res) => {
+    const { fromPrivateIP, note } = req.body || {};
+    const record = {
+        fromPrivateIP: fromPrivateIP || 'unknown',
+        note: note || '',
+        receivedAt: new Date().toISOString(),
+        client: req.ip,
+        xff: req.headers['x-forwarded-for'] || null,
+    };
+    peerReceiveLog.push(record);
+    res.json({ ok: true, received: record, total: peerReceiveLog.length });
+});
+
+// 우리가 받은 목록 확인
+app.get('/api/peer/received', (req, res) => {
+    res.json({ count: peerReceiveLog.length, items: peerReceiveLog });
+});
+
+// 상대 서버로 우리 Private IP를 전송
+app.post('/api/peer/send', async (req, res) => {
+    try {
+        const { peerHost, note } = req.body || {};
+        if (!peerHost) {
+            return res.status(400).json({ ok: false, error: 'peerHost가 필요합니다. 예: 172.31.x.x 또는 hostname' });
+        }
+
+        const info = await getIPInfo();
+        const myPrivate = (info.privateIPs[0] && info.privateIPs[0].address) || null;
+        if (!myPrivate) {
+            return res.status(500).json({ ok: false, error: '내 Private IP를 찾을 수 없습니다.' });
+        }
+
+        const url = `http://${peerHost}:${PORT}/api/peer/register`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fromPrivateIP: myPrivate, note: note || 'hello from peer' }),
+            timeout: 5000,
+        });
+
+        const data = await response.json().catch(() => ({}));
+        res.json({ ok: true, sentTo: url, myPrivateIP: myPrivate, peerResponse: data });
+    } catch (err) {
+        res.status(502).json({ ok: false, error: err.message || String(err) });
+    }
 });
 
 // Public IP를 가져오는 비동기 함수 (AWS Metadata API 우선)
