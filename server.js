@@ -51,6 +51,10 @@ app.get('/samsung', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'samsung', 'index.html'));
 });
 
+app.get('/load', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'load', 'index.html'));
+});
+
 // Public IP를 가져오는 비동기 함수 (AWS Metadata API 우선)
 async function getPublicIP() {
     // AWS EC2 Metadata API (가장 정확) - Node.js에서 직접 접근

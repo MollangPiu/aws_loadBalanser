@@ -63,6 +63,10 @@ module.exports = (peerReceiveLog, port) => {
         res.sendFile(path.join(__dirname, '../../public/samsung/index.html'));
     });
 
+    router.get('/load-test', (req, res) => {
+        res.sendFile(path.join(__dirname, '../../public/load/index.html'));
+    });
+
     // 현재 서버 IP 정보
     router.get('/ip-info', async (req, res) => {
         res.json(await getIPInfo());
