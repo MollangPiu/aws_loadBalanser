@@ -24,6 +24,11 @@ app.use(express.json({
 // 서버 간 수신 기록을 메모리에 저장
 const peerReceiveLog = [];
 
+// 메인 홈페이지
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // (페이지 SSR 라우트 제거) — 정적 파일과 단축 경로만 유지
 
 // public 하위에 폴더로 분리된 정적 페이지 단축 경로
