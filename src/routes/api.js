@@ -60,10 +60,12 @@ module.exports = (peerReceiveLog, port) => {
 
     // Samsung 서비스 페이지  
     router.get('/samsung', (req, res) => {
+        console.log('✅ samsung page');
         res.sendFile(path.join(__dirname, '../../public/samsung/index.html'));
     });
 
     router.get('/load-test', (req, res) => {
+        console.log('✅ load-test page');
         res.sendFile(path.join(__dirname, '../../public/load/index.html'));
     });
 
