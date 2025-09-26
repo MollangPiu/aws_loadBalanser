@@ -166,25 +166,5 @@
         <a href="/" class="back-link">← 메인으로 돌아가기</a>
     </div>
 
-    <script>
-        // 서버 정보 가져오기
-        async function loadServerInfo() {
-            try {
-                const startTime = Date.now();
-                const response = await fetch('/api/ip-info');
-                const data = await response.json();
-                const endTime = Date.now();
-                
-                document.getElementById('serverIP').textContent = data.publicIP || 'N/A';
-                document.getElementById('responseTime').textContent = `${endTime - startTime}ms`;
-            } catch (error) {
-                console.error('서버 정보 로드 실패:', error);
-                document.getElementById('serverIP').textContent = '연결 실패';
-            }
-        }
-        
-        // 페이지 로드 시 서버 정보 가져오기
-        loadServerInfo();
-    </script>
 </body>
 </html>
