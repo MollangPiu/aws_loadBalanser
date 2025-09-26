@@ -53,16 +53,6 @@ module.exports = (peerReceiveLog, port) => {
         }
     });
 
-    // Apple 서비스 페이지
-    router.get('/apple', (req, res) => {
-        res.sendFile(path.join(__dirname, '../../public/apple/index.html'));
-    });
-
-    // Samsung 서비스 페이지  
-    router.get('/samsung', (req, res) => {
-        console.log('✅ samsung page');
-        res.sendFile(path.join(__dirname, '../../public/samsung/index.html'));
-    });
 
     router.get('/load-test', (req, res) => {
         console.log('✅ load-test page');

@@ -44,14 +44,32 @@ app.get('/peer-test', (req, res) => {
 
 // MSA 데모 서비스 페이지들
 app.get('/apple', (req, res) => {
+    console.log('🍎 Apple 서비스에 접속했습니다!');
+    console.log('📱 클라이언트 IP:', req.ip);
+    console.log('🕐 접속 시간:', new Date().toLocaleString('ko-KR'));
+    console.log('🌐 User-Agent:', req.headers['user-agent']);
+    console.log('----------------------------------------');
+    
     res.sendFile(path.join(__dirname, 'public', 'apple', 'index.html'));
 });
 
 app.get('/samsung', (req, res) => {
+    console.log('📱 Samsung 서비스에 접속했습니다!');
+    console.log('📱 클라이언트 IP:', req.ip);
+    console.log('🕐 접속 시간:', new Date().toLocaleString('ko-KR'));
+    console.log('🌐 User-Agent:', req.headers['user-agent']);
+    console.log('----------------------------------------');
+    
     res.sendFile(path.join(__dirname, 'public', 'samsung', 'index.html'));
 });
 
 app.get('/load', (req, res) => {
+    console.log('⚖️ Load Balancer 페이지에 접속했습니다!');
+    console.log('📊 클라이언트 IP:', req.ip);
+    console.log('🕐 접속 시간:', new Date().toLocaleString('ko-KR'));
+    console.log('🌐 User-Agent:', req.headers['user-agent']);
+    console.log('----------------------------------------');
+    
     res.sendFile(path.join(__dirname, 'public', 'load', 'index.html'));
 });
 
