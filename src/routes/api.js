@@ -54,9 +54,53 @@ module.exports = (peerReceiveLog, port) => {
     });
 
 
+    // Apple 서비스 페이지
+    router.get('/apple', (req, res) => {
+        console.log('🍎 Apple 서비스에 접속했습니다! (API 라우터)');
+        console.log('📱 클라이언트 IP:', req.ip);
+        console.log('🕐 접속 시간:', new Date().toLocaleString('ko-KR'));
+        console.log('🌐 User-Agent:', req.headers['user-agent']);
+        console.log('----------------------------------------');
+        res.sendFile(path.join(__dirname, '../../public/apple/index.html'));
+    });
+
+    // Samsung 서비스 페이지  
+    router.get('/samsung', (req, res) => {
+        console.log('📱 Samsung 서비스에 접속했습니다! (API 라우터)');
+        console.log('📱 클라이언트 IP:', req.ip);
+        console.log('🕐 접속 시간:', new Date().toLocaleString('ko-KR'));
+        console.log('🌐 User-Agent:', req.headers['user-agent']);
+        console.log('----------------------------------------');
+        res.sendFile(path.join(__dirname, '../../public/samsung/index.html'));
+    });
+
     router.get('/load-test', (req, res) => {
         console.log('✅ load-test page');
         res.sendFile(path.join(__dirname, '../../public/load/index.html'));
+    });
+
+    // Apple 페이지 접속 로그
+    router.post('/apple/access', (req, res) => {
+        console.log('🍎 Apple 페이지에 접속했습니다!');
+        console.log('📱 클라이언트 IP:', req.ip);
+        console.log('🕐 접속 시간:', new Date().toLocaleString('ko-KR'));
+        console.log('🌐 User-Agent:', req.headers['user-agent']);
+        console.log('📊 요청 데이터:', req.body);
+        console.log('----------------------------------------');
+        
+        res.json({ ok: true, message: 'Apple 페이지 접속 로그 기록됨' });
+    });
+
+    // Samsung 페이지 접속 로그
+    router.post('/samsung/access', (req, res) => {
+        console.log('📱 Samsung 페이지에 접속했습니다!');
+        console.log('📱 클라이언트 IP:', req.ip);
+        console.log('🕐 접속 시간:', new Date().toLocaleString('ko-KR'));
+        console.log('🌐 User-Agent:', req.headers['user-agent']);
+        console.log('📊 요청 데이터:', req.body);
+        console.log('----------------------------------------');
+        
+        res.json({ ok: true, message: 'Samsung 페이지 접속 로그 기록됨' });
     });
 
     // 현재 서버 IP 정보

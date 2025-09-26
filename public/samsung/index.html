@@ -167,7 +167,46 @@
     </div>
 
     <script>
-        console.log('✅ samsung page');
+        // 페이지 접속 로그 전송
+        async function sendPageAccessLog() {
+            try {
+                await fetch('/api/samsung/access', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        page: 'samsung',
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
+                    })
+                });
+            } catch (error) {
+                console.error('로그 전송 실패:', error);
+            }
+        }
+
+        // 서버 정보 가져오기
+        async function loadServerInfo() {
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/ip-info');
+                const data = await response.json();
+                const endTime = Date.now();
+                
+                document.getElementById('serverIP').textContent = data.publicIP || 'N/A';
+                document.getElementById('responseTime').textContent = `${endTime - startTime}ms`;
+            } catch (error) {
+                console.error('서버 정보 로드 실패:', error);
+                document.getElementById('serverIP').textContent = '연결 실패';
+            }
+        }
+        
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            sendPageAccessLog(); // 접속 로그 전송
+            loadServerInfo(); // 서버 정보 로드
+        });
     </script>
 
 </body>

@@ -53,6 +53,8 @@ app.get('/apple', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'apple', 'index.html'));
 });
 
+console.log('✅ Apple 라우트 등록됨: /apple');
+
 app.get('/samsung', (req, res) => {
     console.log('📱 Samsung 서비스에 접속했습니다!');
     console.log('📱 클라이언트 IP:', req.ip);
@@ -62,6 +64,8 @@ app.get('/samsung', (req, res) => {
     
     res.sendFile(path.join(__dirname, 'public', 'samsung', 'index.html'));
 });
+
+console.log('✅ Samsung 라우트 등록됨: /samsung');
 
 app.get('/load', (req, res) => {
     console.log('⚖️ Load Balancer 페이지에 접속했습니다!');
@@ -149,63 +153,10 @@ async function getIPInfo() {
 }
 
 // ========== API Router (/api) ==========
-const api = express.Router();
-
-// 상대 서버가 우리에게 자신의 Private IP를 등록(전송)
-api.post('/peer/register', (req, res) => {
-    const { fromPrivateIP, note } = req.body || {};
-    const record = {
-        fromPrivateIP: fromPrivateIP || 'unknown',
-        note: note || '',
-        receivedAt: new Date().toISOString(),
-        client: req.ip,
-        xff: req.headers['x-forwarded-for'] || null,
-    };
-    peerReceiveLog.push(record);
-    res.json({ ok: true, received: record, total: peerReceiveLog.length });
-});
-
-// 우리가 받은 목록 확인
-api.get('/peer/received', (req, res) => {
-    res.json({ count: peerReceiveLog.length, items: peerReceiveLog });
-});
-
-// 상대 서버로 우리 Private IP를 전송
-api.post('/peer/send', async (req, res) => {
-    try {
-        const { peerHost, note } = req.body || {};
-        if (!peerHost) {
-            return res.status(400).json({ ok: false, error: 'peerHost가 필요합니다. 예: 172.31.x.x 또는 hostname' });
-        }
-
-        const info = await getIPInfo();
-        const myPrivate = (info.privateIPs[0] && info.privateIPs[0].address) || null;
-        if (!myPrivate) {
-            return res.status(500).json({ ok: false, error: '내 Private IP를 찾을 수 없습니다.' });
-        }
-
-        const url = `http://${peerHost}:${PORT}/api/peer/register`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fromPrivateIP: myPrivate, note: note || 'hello from peer' }),
-            timeout: 5000,
-        });
-
-        const data = await response.json().catch(() => ({}));
-        res.json({ ok: true, sentTo: url, myPrivateIP: myPrivate, peerResponse: data });
-    } catch (err) {
-        res.status(502).json({ ok: false, error: err.message || String(err) });
-    }
-});
-
-// IP 정보 조회
-api.get('/ip-info', async (req, res) => {
-    res.json(await getIPInfo());
-});
+const apiRouter = require('./src/routes/api')(peerReceiveLog, PORT);
 
 // /api로 마운트
-app.use('/api', api);
+app.use('/api', apiRouter);
 
 app.listen(PORT, () => {
     console.log('🌐 Server is running on port ' + PORT);
