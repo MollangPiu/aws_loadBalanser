@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const { getIPInfo } = require('../services/ip');
 
@@ -50,6 +51,16 @@ module.exports = (peerReceiveLog, port) => {
         } catch (err) {
             res.status(502).json({ ok: false, error: err.message || String(err) });
         }
+    });
+
+    // Apple 서비스 페이지
+    router.get('/apple', (req, res) => {
+        res.sendFile(path.join(__dirname, '../../public/apple/index.html'));
+    });
+
+    // Samsung 서비스 페이지  
+    router.get('/samsung', (req, res) => {
+        res.sendFile(path.join(__dirname, '../../public/samsung/index.html'));
     });
 
     // 현재 서버 IP 정보

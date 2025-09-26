@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Service - MSA Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        
+        .service-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .info-value {
+            color: #666;
+            font-family: monospace;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #007AFF;
+        }
+        
+        .feature h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .status {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 20px 0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #007AFF;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🍎</div>
+        <h1>Apple Service</h1>
+        <p class="subtitle">마이크로서비스 아키텍처 데모</p>
+        
+        <div class="status">🟢 서비스 정상 운영 중</div>
+        
+        <div class="service-info">
+            <div class="info-item">
+                <span class="info-label">서비스명:</span>
+                <span class="info-value">Apple Product Service</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">포트:</span>
+                <span class="info-value" id="port">3000</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">서버 IP:</span>
+                <span class="info-value" id="serverIP">로딩 중...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">응답 시간:</span>
+                <span class="info-value" id="responseTime">-</span>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>📱 제품 관리</h3>
+                <p>iPhone, iPad, MacBook 등 Apple 제품 정보를 관리합니다.</p>
+            </div>
+            <div class="feature">
+                <h3>🛒 주문 처리</h3>
+                <p>Apple 제품 주문 및 결제 처리를 담당합니다.</p>
+            </div>
+            <div class="feature">
+                <h3>📊 재고 관리</h3>
+                <p>실시간 재고 현황을 추적하고 관리합니다.</p>
+            </div>
+        </div>
+        
+        <a href="/" class="back-link">← 메인으로 돌아가기</a>
+    </div>
+
+    <script>
+        // 서버 정보 가져오기
+        async function loadServerInfo() {
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/ip-info');
+                const data = await response.json();
+                const endTime = Date.now();
+                
+                document.getElementById('serverIP').textContent = data.publicIP || 'N/A';
+                document.getElementById('responseTime').textContent = `${endTime - startTime}ms`;
+            } catch (error) {
+                console.error('서버 정보 로드 실패:', error);
+                document.getElementById('serverIP').textContent = '연결 실패';
+            }
+        }
+        
+        // 페이지 로드 시 서버 정보 가져오기
+        loadServerInfo();
+    </script>
+</body>
+</html>
